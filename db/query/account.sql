@@ -24,3 +24,13 @@ UPDATE accounts
   set balance = $2
 WHERE id = $1
 RETURNING *;
+
+-- name: GetAccountForUpdate :one
+SELECT * FROM accounts
+WHERE id = $1 LIMIT 1 FOR UPDATE;
+
+-- name: AddAccountBalance :one
+UPDATE accounts
+SET balance = balance + sqlc.arg(amount)
+WHERE id = sqlc.arg(id)
+RETURNING *;
