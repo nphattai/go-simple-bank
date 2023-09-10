@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 	db "github.com/nphattai/go-simple-bank/db/sqlc"
 )
 
@@ -27,8 +28,14 @@ func (sever *Server) createAccount(ctx *gin.Context) {
 		Balance:  0,
 	})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		if pgErr, ok := err.(*pq.Error); ok {
+			if pgErr.Code.Name() == "unique_violation" || pgErr.Code.Name() == "foreign_key_violation" {
+				ctx.JSON(http.StatusForbidden, errorResponse(err))
+				return
+			}
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
 	}
 
 	ctx.JSON(http.StatusOK, account)

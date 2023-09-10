@@ -17,8 +17,8 @@ RETURNING id, owner, balance, currency, created_at
 `
 
 type AddAccountBalanceParams struct {
-	Amount int64
-	ID     int64
+	Amount int64 `json:"amount"`
+	ID     int64 `json:"id"`
 }
 
 func (q *Queries) AddAccountBalance(ctx context.Context, arg AddAccountBalanceParams) (Account, error) {
