@@ -30,14 +30,14 @@ func NewSever(store db.Store) (*Server, error) {
 		v.RegisterValidation("currency", validCurrency)
 	}
 
-	router.POST("/accounts", server.createAccount)
-	router.GET("/accounts/:id", server.getAccount)
-	router.GET("/accounts/", server.getListAccounts)
-
-	router.POST("/transfers", server.transferMoney)
-
 	router.POST("/users", server.createUser)
 	router.POST("/users/login", server.login)
+
+	authGroup := router.Group("/", authMiddleware(tokenMaker))
+	authGroup.POST("/accounts", server.createAccount)
+	authGroup.GET("/accounts/:id", server.getAccount)
+	authGroup.GET("/accounts/", server.getListAccounts)
+	authGroup.POST("/transfers", server.transferMoney)
 
 	server.router = router
 	return server, nil
