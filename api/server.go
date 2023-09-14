@@ -14,16 +14,17 @@ import (
 type Server struct {
 	store      db.Store
 	tokenMaker token.Maker
+	config     util.Config
 	router     *gin.Engine
 }
 
-func NewSever(store db.Store) (*Server, error) {
+func NewSever(config util.Config, store db.Store) (*Server, error) {
 	tokenMaker, err := token.NewJWTMaker(util.RandomString(32))
 	if err != nil {
 		return nil, fmt.Errorf("can not create token maker: %w", err)
 	}
 
-	server := &Server{store: store, tokenMaker: tokenMaker}
+	server := &Server{store: store, tokenMaker: tokenMaker, config: config}
 	router := gin.Default()
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {

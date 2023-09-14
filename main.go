@@ -16,17 +16,17 @@ func main() {
 		log.Fatal("can not load config :", err)
 	}
 
-	conn, err := sql.Open(config.DB_DRIVER, config.DB_SOURCE)
+	conn, err := sql.Open(config.DBDriver, config.DBSource)
 
 	if err != nil {
 		log.Fatal("can not connect to db:", err)
 	}
 
 	store := db.NewStore(conn)
-	server, err := api.NewSever(store)
+	server, err := api.NewSever(config, store)
 
 	if err != nil {
 		log.Fatal("can not create server: ", err)
 	}
-	server.Start(config.SERVER_ADDRESS)
+	server.Start(config.ServerAddress)
 }
