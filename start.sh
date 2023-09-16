@@ -4,7 +4,7 @@ set -e # the script will exit immediately if command return no zero status
 
 echo "run db migration"
 source /app/app.env 
-echo "$DB_SOURCE"
+echo "$DB_DRIVER - $DB_SOURCE"
 /app/migrate -path /app/migration -database "$DB_SOURCE" -verbose up
 
 echo "start the app"
