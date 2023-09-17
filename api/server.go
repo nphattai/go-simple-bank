@@ -35,6 +35,7 @@ func NewSever(config util.Config, store db.Store) (*Server, error) {
 	router.POST("/users/login", server.login)
 
 	authGroup := router.Group("/", authMiddleware(tokenMaker))
+	authGroup.POST("/renew-token", server.renewToken)
 	authGroup.POST("/accounts", server.createAccount)
 	authGroup.GET("/accounts/:id", server.getAccount)
 	authGroup.GET("/accounts/", server.getListAccounts)

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	db "github.com/nphattai/go-simple-bank/db/sqlc"
 	"github.com/nphattai/go-simple-bank/util"
@@ -61,8 +62,12 @@ type loginUserRequest struct {
 }
 
 type loginUserResponse struct {
-	User        db.User `json:"user"`
-	AccessToken string  `json:"access_token"`
+	SessionId             uuid.UUID `json:"session_id"`
+	AccessToken           string    `json:"access_token"`
+	AccessTokenExpiredAt  time.Time `json:"access_token_expired_at"`
+	RefreshToken          string    `json:"refresh_token"`
+	RefreshTokenExpiredAt time.Time `json:"refresh_token_expired_at"`
+	User                  db.User   `json:"user"`
 }
 
 func (server *Server) login(ctx *gin.Context) {
@@ -91,17 +96,39 @@ func (server *Server) login(ctx *gin.Context) {
 		return
 	}
 
-	token, err := server.tokenMaker.CreateToken(req.Username, time.Hour)
+	token, accessTokenPayload, err := server.tokenMaker.CreateToken(req.Username, server.config.AccessTokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	refreshToken, refreshTokenPayload, err := server.tokenMaker.CreateToken(req.Username, server.config.RefreshTokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	session, err := server.store.CreateSession(ctx, db.CreateSessionParams{
+		ID:           refreshTokenPayload.ID,
+		Username:     req.Username,
+		RefreshToken: refreshToken,
+		UserAgent:    ctx.Request.UserAgent(),
+		ClientIp:     ctx.ClientIP(),
+		ExpiredAt:    refreshTokenPayload.ExpiredAt,
+	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
 	res = loginUserResponse{
-		User:        user,
-		AccessToken: token,
+		SessionId:             session.ID,
+		AccessToken:           token,
+		AccessTokenExpiredAt:  accessTokenPayload.ExpiredAt,
+		RefreshToken:          refreshToken,
+		RefreshTokenExpiredAt: refreshTokenPayload.ExpiredAt,
+		User:                  user,
 	}
 
 	ctx.JSON(http.StatusOK, res)
-
 }
