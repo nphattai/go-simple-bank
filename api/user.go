@@ -21,7 +21,7 @@ type createUserRequest struct {
 	Email    string `json:"email"  binding:"required,email"`
 }
 
-func (sever *Server) createUser(ctx *gin.Context) {
+func (server *Server) createUser(ctx *gin.Context) {
 	var req createUserRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -36,7 +36,7 @@ func (sever *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := sever.store.CreateUser(ctx, db.CreateUserParams{
+	user, err := server.store.CreateUser(ctx, db.CreateUserParams{
 		Username:       req.Username,
 		HashedPassword: hashedPassword,
 		FullName:       req.FullName,
