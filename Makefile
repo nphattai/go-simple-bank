@@ -57,4 +57,10 @@ dbdocs_build:
 dbml_dump:
 	dbml2sql doc/db.dbml -o doc/schema.sql
 
-.PHONY: network postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 new_migration db_docs db_schema sqlc test server mock pull_docker_ecr dbdocs_build dbml_dump
+proto:
+	rm -f pb/*.go
+	protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
+    --go-grpc_out=pb --go-grpc_opt=paths=source_relative \
+    proto/*.proto
+
+.PHONY: network postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 new_migration db_docs db_schema sqlc test server mock pull_docker_ecr dbdocs_build dbml_dump proto
