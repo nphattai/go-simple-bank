@@ -51,4 +51,10 @@ mock:
 pull_docker_ecr:
 	aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 688740097560.dkr.ecr.ap-southeast-1.amazonaws.com
 
-.PHONY: network postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 new_migration db_docs db_schema sqlc test server mock pull_docker_ecr
+dbdocs_build:
+	dbdocs build doc/db.dbml
+
+dbml_dump:
+	dbml2sql doc/db.dbml -o doc/schema.sql
+
+.PHONY: network postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 new_migration db_docs db_schema sqlc test server mock pull_docker_ecr dbdocs_build dbml_dump
