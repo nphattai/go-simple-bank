@@ -11,9 +11,11 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/nphattai/go-simple-bank/api"
 	db "github.com/nphattai/go-simple-bank/db/sqlc"
+	_ "github.com/nphattai/go-simple-bank/doc/statik"
 	"github.com/nphattai/go-simple-bank/gapi"
 	"github.com/nphattai/go-simple-bank/pb"
 	"github.com/nphattai/go-simple-bank/util"
+	"github.com/rakyll/statik/fs"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -56,8 +58,13 @@ func runGrpcGatewayServer(config util.Config, store db.Store) {
 	mux := http.NewServeMux()
 	mux.Handle("/", grpcMux)
 
-	fs := http.FileServer(http.Dir("./doc/swagger"))
-	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fs))
+	statikFS, err := fs.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFS))
+	mux.Handle("/swagger/", swaggerHandler)
 
 	listener, err := net.Listen("tcp", config.HTTPServerAddress)
 	if err != nil {
