@@ -18,6 +18,10 @@ import (
 	"github.com/rakyll/statik/fs"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func main() {
@@ -34,9 +38,23 @@ func main() {
 
 	store := db.NewStore(conn)
 
+	runDBMigration(config.MigrationSourceURL, config.DBSource)
+
 	go runGrpcGatewayServer(config, store)
 
 	runGrpcServer(config, store)
+}
+
+func runDBMigration(sourceURL string, dbURL string) {
+	m, err := migrate.New(sourceURL, dbURL)
+	if err != nil {
+		log.Fatal("can not create migrate: ", err)
+	}
+
+	err = m.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		log.Fatal("can not run migration: ", err)
+	}
 }
 
 func runGrpcGatewayServer(config util.Config, store db.Store) {
